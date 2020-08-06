@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <link href="/styles.css" rel="stylesheet" />
+    <script src="../../socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+  </head>
+  <body>
+        <div id="mario-chat">
+            <div id="chat-window">
+                <div id="output"></div>
+                <div id="feedback"></div>
+            </div>
+            <div id="user-list"></div>
+            <input id="message" type="text" placeholder="Message" />
+            <button id="send">Send</button>
+        </div>
+
+        <div id="myModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="login-box">
+                    <label for="user" id="log-user-label">Username</label>
+                    <input id="log-user" class="login" type="text" />
+
+                    <label for="pword" id="log-pass-label">Password</label>
+                    <input id="log-pass" class="login" type="password" />
+
+                    <button id="log-btn" class="login-btn">Login</button>
+                </div>
+                <div class="vl"></div>
+                <div id="register-box">
+                    <label for="user" id="reg-user-label">Username</label>
+                    <input id="reg-user" class="login" type="text" />
+
+                    <label for="pword" id="reg-pass-label">Password</label>
+                    <input id="reg-pass" class="login" type="password" />
+
+                    <button id="reg-btn" class="login-btn">Register</button>
+                </div>
+            </div>
+        </div>
+    <script src="/chat.js"></script>
+  </body>
+</html>
