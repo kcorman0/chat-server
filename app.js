@@ -1,13 +1,16 @@
+require('dotenv').config();
+
 const express = require('express');
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const { cachedDataVersionTag } = require('v8');
-const { config } = require('./config.js');
+const { nextTick } = require('process');
 
-mongoose.connect(config.DATABASE_URI, {useUnifiedTopology: true, useNewUrlParser: true});
+mongoose.connect(process.env.DATABASE_URI, {useUnifiedTopology: true, useNewUrlParser: true});
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, "MongoDB connection error:"));
 var loginSchema = new mongoose.Schema({
@@ -33,6 +36,7 @@ const server = http.listen(3000, () => {
 io.on('connection', (socket) => {
     socket.on('message', (data) => {
         io.sockets.emit('message', data);
+        console.log("message", data);
     });
 
     socket.on('typing', (data) => {
@@ -79,6 +83,7 @@ io.on('connection', (socket) => {
                     throw err;
                 }
                 if (data && await bcrypt.compare(typedPass, data.password)) {
+                    // const accessToken = createToken(username);
                     socket.emit('login-attempt', true);
                 }
                 else {
@@ -108,3 +113,22 @@ function getUsers() {
     });
     return values;
 }
+
+// function createToken(username) {
+//     const user = { name: username };
+
+//     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+// }
+
+// function authenticateToken(req, res, next) {
+//     const authHeader = req.headers['authorization'];
+//     const token = authHeader && authHeader.split(' ')[1];
+//     if (token === null) return res.sendStatus(401);
+
+//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+//         if (err) return res.sendStatus(403);
+//         req.user = user;
+//         next();
+//     })
+     
+// }

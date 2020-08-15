@@ -15,7 +15,7 @@ h2{
     color: #575ed8;
 }
 
-#mario-chat{
+#chat{
     width: 1400px;
     margin: 30px auto;
     border: 1px solid #ddd;
@@ -33,11 +33,16 @@ h2{
     float: left;
 }
 
-#output p{
+.tabcontent p{
+    /* display: none; */
     padding: 14px 0px;
     margin: 0 20px;
     border-bottom: 1px solid #575ed8;
     color: white;
+}
+
+#output {
+    display: block;
 }
 
 #feedback p{
@@ -45,7 +50,7 @@ h2{
     margin: 0 20px;
 }
 
-#output strong{
+.tabcontent strong{
     color: #575ed8;
 }
 
@@ -148,4 +153,30 @@ label{
     color: white;
     text-decoration: none;
     cursor: pointer;
+}
+
+.tab {
+    overflow: hidden;
+    background-color: #262626;
+}
+
+  /* Style the buttons that are used to open the tab content */
+.tab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+  
+/* Change background color of buttons on hover */
+.tab button:hover {
+    background-color: #575ed8;
+}
+  
+/* Create an active/current tablink class */
+.tab button.active {
+    background-color: #575ed8;
 }

@@ -1,10 +1,10 @@
 // Init
-var socket = io.connect('http://localhost:3000');
+const socket = io.connect('http://localhost:3000');
 
 var username = "";
+var curChat = 'output';
 var message = document.getElementById('message'),
     sendBtn = document.getElementById('send'),
-    output = document.getElementById('output'),
     feedback = document.getElementById('feedback');
     userList = document.getElementById('user-list');
     modal = document.getElementById('myModal');
@@ -103,10 +103,10 @@ span.addEventListener('click', () => {
 // Socket.io responses
 socket.on('message', (data) => {
     if (data.username === username) {
-        output.innerHTML += '<b><p><strong>' +data.username+ ': </strong>' +data.message+ '</p></b>';
+        document.getElementById(data.channel).innerHTML += '<b><p><strong>' +data.username+ ': </strong>' +data.message+ '</p></b>';
     }
     else {
-        output.innerHTML += '<p><strong>' +data.username+ ': </strong>' +data.message+ '</p>';
+        document.getElementById(data.channel).innerHTML += '<p><strong>' +data.username+ ': </strong>' +data.message+ '</p>';
     }
     feedback.innerHTML = '';
 });
@@ -154,12 +154,32 @@ socket.on('user-disconnected', (data) => {
 });
 
 // Helper functions
+function openChat(evt, chatName) {
+    var i, tabcontent, tablinks;
+    curChat = chatName;
+  
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+  
+    document.getElementById(chatName).style.display = "block";
+    evt.currentTarget.className += " active";
+} 
+
 function sendMessage(e) {
     socket.emit('message', {
+        channel: curChat,
         message: message.value,
         username: username
     });
     message.value = "";
+    feedback.innerHTML = '';
     setTimeout(() => {
         chatWindow.scrollTop = chatWindow.scrollHeight;
     }, 100);
@@ -181,5 +201,4 @@ function createUserList(users) {
 function loginSuccess() {
     modal.style.display = "none";
     socket.emit('user-connected', username);
-    sendMessage();
 }

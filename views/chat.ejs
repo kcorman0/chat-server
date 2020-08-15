@@ -7,9 +7,14 @@
     <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
   </head>
   <body>
-        <div id="mario-chat">
+        <div id="chat">
+            <div class="tab">
+                <button class="tablinks active" onclick="openChat(event, 'output')">General</button>
+                <button class="tablinks" onclick="openChat(event, 'output2')">Games</button>
+            </div>
             <div id="chat-window">
-                <div id="output"></div>
+                <div id="output" class="tabcontent"></div>
+                <div id="output2" class="tabcontent"></div>
                 <div id="feedback"></div>
             </div>
             <div id="user-list"></div>
