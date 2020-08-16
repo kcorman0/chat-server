@@ -1,9 +1,9 @@
 // Init
 const socket = io.connect('http://localhost:3000');
 
-var username = "";
-var curChat = 'output';
-var message = document.getElementById('message'),
+let username = "";
+let curChat = 'output';
+const message = document.getElementById('message'),
     sendBtn = document.getElementById('send'),
     feedback = document.getElementById('feedback');
     userList = document.getElementById('user-list');
@@ -47,7 +47,7 @@ sendBtn.addEventListener('click', () => {
     }
 });
 
-// Login
+// Register
 registerBtn.addEventListener('click', () => {
     if (regPass.value.length < 8) {
         regUserLabel.style.color = "#575ed8";
@@ -78,6 +78,7 @@ regPass.addEventListener('keydown', ({key}) => {
     }
 });
 
+// Login
 loginBtn.addEventListener('click', () => {
     socket.emit('login-attempt', {
         username: logUser.value, 
@@ -102,13 +103,17 @@ span.addEventListener('click', () => {
 
 // Socket.io responses
 socket.on('message', (data) => {
-    if (data.username === username) {
-        document.getElementById(data.channel).innerHTML += '<b><p><strong>' +data.username+ ': </strong>' +data.message+ '</p></b>';
-    }
-    else {
-        document.getElementById(data.channel).innerHTML += '<p><strong>' +data.username+ ': </strong>' +data.message+ '</p>';
-    }
+    displayMessage(data.channel, data.username, data.message);
     feedback.innerHTML = '';
+});
+
+socket.on('load-messages', (data) => {
+    data.messages.forEach((entry) => {
+        displayMessage(data.channel, entry.username, entry.message);
+    });
+    setTimeout(() => {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }, 100);
 });
 
 socket.on('typing', (data) => {
@@ -155,16 +160,15 @@ socket.on('user-disconnected', (data) => {
 
 // Helper functions
 function openChat(evt, chatName) {
-    var i, tabcontent, tablinks;
     curChat = chatName;
   
-    tabcontent = document.getElementsByClassName("tabcontent");
-    for (i = 0; i < tabcontent.length; i++) {
+    const tabcontent = document.getElementsByClassName("tabcontent");
+    for (let i = 0; i < tabcontent.length; i++) {
       tabcontent[i].style.display = "none";
     }
 
-    tablinks = document.getElementsByClassName("tablinks");
-    for (i = 0; i < tablinks.length; i++) {
+    const tablinks = document.getElementsByClassName("tablinks");
+    for (let i = 0; i < tablinks.length; i++) {
       tablinks[i].className = tablinks[i].className.replace(" active", "");
     }
   
@@ -185,8 +189,17 @@ function sendMessage(e) {
     }, 100);
 }
 
+function displayMessage(channel, user, message) {
+    if (user === username) {
+        document.getElementById(channel).innerHTML += '<b><p><strong>' +user+ ': </strong>' +message+ '</p></b>';
+    }
+    else {
+        document.getElementById(channel).innerHTML += '<p><strong>' +user+ ': </strong>' +message+ '</p>';
+    }
+}
+
 function createUserList(users) {
-    var final = "";
+    let final = "";
     users.forEach((user) => {
         if (user === username) {
             final += '<p><strong>' +user+ '</strong></p>';

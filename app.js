@@ -11,16 +11,21 @@ const { cachedDataVersionTag } = require('v8');
 const { nextTick } = require('process');
 
 mongoose.connect(process.env.DATABASE_URI, {useUnifiedTopology: true, useNewUrlParser: true});
-var db = mongoose.connection;
+const db = mongoose.connection;
 db.on('error', console.error.bind(console, "MongoDB connection error:"));
-var loginSchema = new mongoose.Schema({
+
+const loginSchema = new mongoose.Schema({
     username: String,
     password: String
 });
+const loginModel = mongoose.model('Login', loginSchema);
 
-var loginModel = mongoose.model('LoginModel', loginSchema);
+const chatSchema = new mongoose.Schema({
+    username: String,
+    message: String
+});
 
-var connectedUsers = {};
+const connectedUsers = {};
 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
@@ -36,7 +41,14 @@ const server = http.listen(3000, () => {
 io.on('connection', (socket) => {
     socket.on('message', (data) => {
         io.sockets.emit('message', data);
-        console.log("message", data);
+
+        const chatModel = mongoose.model(data.channel + 'Channel', chatSchema);
+        chatModel({
+            username : data.username,
+            message : data.message
+        }).save((err) => {
+            if (err) throw err;
+        });
     });
 
     socket.on('typing', (data) => {
@@ -99,6 +111,13 @@ io.on('connection', (socket) => {
     socket.on('user-connected', (data) => {
         connectedUsers[socket.id] = data;
         io.sockets.emit('user-connected', getUsers());
+
+        getChannelHist('output').then(hist => {
+            socket.emit('load-messages', { channel: 'output', messages : hist });
+        });
+        getChannelHist('output2').then(hist => {
+            socket.emit('load-messages', { channel: 'output2', messages : hist });
+        });
     });
 
     socket.on('disconnect', () => {
@@ -108,10 +127,25 @@ io.on('connection', (socket) => {
 });
 
 function getUsers() {
-    var values = Object.keys(connectedUsers).map((key) => {
+    const values = Object.keys(connectedUsers).map((key) => {
         return connectedUsers[key];
     });
     return values;
+}
+
+async function getChannelHist(channel) {
+    const chatModel = mongoose.model(channel + 'Channel', chatSchema);
+    let hist;
+    await chatModel.find({}, {
+        "_id": 0,
+        "__v": 0
+    }, (err, data) => {
+        if (err)  {
+            throw err;
+        }
+        hist = data;
+    });
+    return hist;
 }
 
 // function createToken(username) {
