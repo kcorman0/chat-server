@@ -11,8 +11,19 @@ const { cachedDataVersionTag } = require('v8');
 const { nextTick } = require('process');
 
 mongoose.connect(process.env.DATABASE_URI, {useUnifiedTopology: true, useNewUrlParser: true});
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, "MongoDB connection error:"));
+const connection = mongoose.connection;
+let collections;
+
+connection.on('error', console.error.bind(console, "MongoDB connection error:"));
+connection.on('open', function () {
+    connection.db.listCollections().toArray(function (err, names) {
+      if (err) {
+        console.log(err);
+      } else {
+        collections = names.map(entry => entry.name).filter(entry => entry.endsWith('-channels'));
+      }
+    });
+});
 
 const loginSchema = new mongoose.Schema({
     username: String,
@@ -42,17 +53,22 @@ io.on('connection', (socket) => {
     socket.on('message', (data) => {
         io.sockets.emit('message', data);
 
-        const chatModel = mongoose.model(data.channel + 'Channel', chatSchema);
+        const chatModel = mongoose.model(data.channel, chatSchema);
         chatModel({
             username : data.username,
             message : data.message
         }).save((err) => {
             if (err) throw err;
+            else console.log(data.username + ": " + data.message);
         });
     });
 
     socket.on('typing', (data) => {
         socket.broadcast.emit('typing', data);
+    });
+
+    socket.on('create-channel', (data) => {
+        io.sockets.emit('create-channel', data);
     });
 
     socket.on('register-acc', async (data) => {
@@ -112,12 +128,12 @@ io.on('connection', (socket) => {
         connectedUsers[socket.id] = data;
         io.sockets.emit('user-connected', getUsers());
 
-        getChannelHist('output').then(hist => {
-            socket.emit('load-messages', { channel: 'output', messages : hist });
-        });
-        getChannelHist('output2').then(hist => {
-            socket.emit('load-messages', { channel: 'output2', messages : hist });
-        });
+        collections.forEach((entry) => {
+            entry = entry.slice(0, -1);
+            getChannelHist(entry).then(hist => {
+                socket.emit('load-messages', { channel: entry, messages : hist });
+            });
+        })
     });
 
     socket.on('disconnect', () => {
@@ -134,7 +150,7 @@ function getUsers() {
 }
 
 async function getChannelHist(channel) {
-    const chatModel = mongoose.model(channel + 'Channel', chatSchema);
+    const chatModel = mongoose.model(channel, chatSchema);
     let hist;
     await chatModel.find({}, {
         "_id": 0,

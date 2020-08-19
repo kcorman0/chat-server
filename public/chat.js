@@ -1,25 +1,29 @@
-// Init
 const socket = io.connect('http://localhost:3000');
-
 let username = "";
-let curChat = 'output';
+let curChannel = 'general-channel';
 const message = document.getElementById('message'),
+    chatWindow = document.getElementById('chat-window'),
     sendBtn = document.getElementById('send'),
-    feedback = document.getElementById('feedback');
-    userList = document.getElementById('user-list');
-    modal = document.getElementById('myModal');
-    span = document.getElementsByClassName('close')[0];
-    loginBtn = document.getElementById('log-btn');
-    logUserLabel = document.getElementById('log-user-label');
-    logUser = document.getElementById('log-user');
-    logPassLabel = document.getElementById('log-pass-label');
-    logPass = document.getElementById('log-pass');
-    registerBtn = document.getElementById('reg-btn');
-    regUserLabel = document.getElementById('reg-user-label');
-    regUser = document.getElementById('reg-user');
-    regPassLabel = document.getElementById('reg-pass-label');
-    regPass = document.getElementById('reg-pass');
-    chatWindow = document.getElementById('chat-window');
+    feedback = document.getElementById('feedback'),
+    userList = document.getElementById('user-list'),
+    loginModal = document.getElementById('login-modal'),
+    loginClose = document.getElementById('login-close'),
+    loginBtn = document.getElementById('log-btn'),
+    logUserLabel = document.getElementById('log-user-label'),
+    logUser = document.getElementById('log-user'),
+    logPassLabel = document.getElementById('log-pass-label'),
+    logPass = document.getElementById('log-pass'),
+    registerBtn = document.getElementById('reg-btn'),
+    regUserLabel = document.getElementById('reg-user-label'),
+    regUser = document.getElementById('reg-user'),
+    regPassLabel = document.getElementById('reg-pass-label'),
+    regPass = document.getElementById('reg-pass'),
+    channelModal = document.getElementById('channel-modal'),
+    channelClose = document.getElementById('channel-close'),
+    channelName = document.getElementById('channel-name'),
+    createChannelBtn = document.getElementById('create-channel-btn'),
+    tabs = document.getElementById('tabs'),
+    newTabBtn = document.getElementById('new-tab');
 
 // Events
 
@@ -27,7 +31,7 @@ const message = document.getElementById('message'),
 message.addEventListener('keydown', ({key}) => {
     if (key === "Enter") {
         if (username === "") {
-            modal.style.display = 'block';
+            loginModal.style.display = 'block';
         }
         else {
             sendMessage();
@@ -40,7 +44,7 @@ message.addEventListener('keydown', ({key}) => {
 
 sendBtn.addEventListener('click', () => {
     if (username === "") {
-        modal.style.display = 'block';
+        loginModal.style.display = 'block';
     }
     else {
         sendMessage();
@@ -95,15 +99,35 @@ logPass.addEventListener('keydown', ({key}) => {
     }
 });
 
-// Close window
-span.addEventListener('click', () => {
-    modal.style.display = "none";
+// Create new channel
+createChannelBtn.addEventListener('click', () => {
+    socket.emit('create-channel', {
+        channel: channelName.value
+    });
 });
+
+channelName.addEventListener('keydown', ({key}) => {
+    if (key === "Enter") {
+        socket.emit('create-channel', {
+            channel: channelName.value
+        });
+    }
+});
+
+// Close window
+loginClose.addEventListener('click', () => {
+    loginModal.style.display = "none";
+});
+
+channelClose.addEventListener('click', () => {
+    channelModal.style.display = "none";
+})
 
 
 // Socket.io responses
 socket.on('message', (data) => {
     displayMessage(data.channel, data.username, data.message);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
     feedback.innerHTML = '';
 });
 
@@ -111,9 +135,7 @@ socket.on('load-messages', (data) => {
     data.messages.forEach((entry) => {
         displayMessage(data.channel, entry.username, entry.message);
     });
-    setTimeout(() => {
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }, 100);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 });
 
 socket.on('typing', (data) => {
@@ -121,6 +143,11 @@ socket.on('typing', (data) => {
     setTimeout(() => {
         feedback.innerHTML = '';
     }, 3000);
+});
+
+socket.on('create-channel', (data) => {
+    createChannel(data.channel);
+    channelModal.style.display = "none";
 });
 
 socket.on('register-acc', (data) => {
@@ -159,37 +186,21 @@ socket.on('user-disconnected', (data) => {
 });
 
 // Helper functions
-function openChat(evt, chatName) {
-    curChat = chatName;
-  
-    const tabcontent = document.getElementsByClassName("tabcontent");
-    for (let i = 0; i < tabcontent.length; i++) {
-      tabcontent[i].style.display = "none";
-    }
-
-    const tablinks = document.getElementsByClassName("tablinks");
-    for (let i = 0; i < tablinks.length; i++) {
-      tablinks[i].className = tablinks[i].className.replace(" active", "");
-    }
-  
-    document.getElementById(chatName).style.display = "block";
-    evt.currentTarget.className += " active";
-} 
-
 function sendMessage(e) {
     socket.emit('message', {
-        channel: curChat,
+        channel: curChannel,
         message: message.value,
         username: username
     });
     message.value = "";
     feedback.innerHTML = '';
-    setTimeout(() => {
-        chatWindow.scrollTop = chatWindow.scrollHeight;
-    }, 100);
 }
 
 function displayMessage(channel, user, message) {
+    const msgChannel = document.getElementById(channel);
+    if (!msgChannel) {
+        createChannel(channel.slice(0, -8));
+    }
     if (user === username) {
         document.getElementById(channel).innerHTML += '<b><p><strong>' +user+ ': </strong>' +message+ '</p></b>';
     }
@@ -212,6 +223,46 @@ function createUserList(users) {
 }
 
 function loginSuccess() {
-    modal.style.display = "none";
+    loginModal.style.display = "none";
     socket.emit('user-connected', username);
+}
+
+function openChannel(evt, chatName) {
+    curChannel = chatName;
+  
+    const tabcontent = document.getElementsByClassName("tabcontent");
+    for (let i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+
+    const tablinks = document.getElementsByClassName("tablinks");
+    for (let i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+  
+    document.getElementById(chatName).style.display = "block";
+    evt.currentTarget.className += " active";
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function createChannel(channel) {
+    const newTab = document.createElement('button');
+    newTab.className = "tablinks";
+    newTab.innerHTML = channel.toLowerCase();
+    newTab.onclick = () => { openChannel(event, channel + "-channel"); };
+    tabs.insertBefore(newTab, newTabBtn);
+
+    const newChannel = document.createElement('div');
+    newChannel.id = channel + "-channel";
+    newChannel.className = "tabcontent";
+    chatWindow.insertBefore(newChannel, feedback);
+}
+
+function showChannelModal() {
+    if (username !== "") {
+        channelModal.style.display = "block";
+    }
+    else {
+        loginModal.style.display = 'block';
+    }
 }

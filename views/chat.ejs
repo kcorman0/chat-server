@@ -8,13 +8,12 @@
   </head>
   <body>
         <div id="chat">
-            <div class="tab">
-                <button class="tablinks active" onclick="openChat(event, 'output')">General</button>
-                <button class="tablinks" onclick="openChat(event, 'output2')">Games</button>
+            <div id="tabs" class="tab">
+                <button class="tablinks active" onclick="openChannel(event, 'general-channel')">general</button>
+                <button id="new-tab" class="add-tab" onclick="showChannelModal()"><b>+</b></button>
             </div>
             <div id="chat-window">
-                <div id="output" class="tabcontent"></div>
-                <div id="output2" class="tabcontent"></div>
+                <div id="general-channel" class="tabcontent"></div>
                 <div id="feedback"></div>
             </div>
             <div id="user-list"></div>
@@ -22,27 +21,39 @@
             <button id="send">Send</button>
         </div>
 
-        <div id="myModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
+        <div id="login-modal" class="modal">
+            <div class="login-modal-content">
+                <span id="login-close" class="close">&times;</span>
                 <div id="login-box">
                     <label for="user" id="log-user-label">Username</label>
-                    <input id="log-user" class="login" type="text" />
+                    <input id="log-user" class="modal-txt" type="text" />
 
                     <label for="pword" id="log-pass-label">Password</label>
-                    <input id="log-pass" class="login" type="password" />
+                    <input id="log-pass" class="modal-txt" type="password" />
 
-                    <button id="log-btn" class="login-btn">Login</button>
+                    <button id="log-btn" class="modal-btn">Login</button>
                 </div>
                 <div class="vl"></div>
                 <div id="register-box">
                     <label for="user" id="reg-user-label">Username</label>
-                    <input id="reg-user" class="login" type="text" />
+                    <input id="reg-user" class="modal-txt" type="text" />
 
                     <label for="pword" id="reg-pass-label">Password</label>
-                    <input id="reg-pass" class="login" type="password" />
+                    <input id="reg-pass" class="modal-txt" type="password" />
 
-                    <button id="reg-btn" class="login-btn">Register</button>
+                    <button id="reg-btn" class="modal-btn">Register</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="channel-modal" class="modal">
+            <div class="channel-modal-content">
+                <span id="channel-close" class="close">&times;</span>
+                <div id="create-channel-box">
+                    <span class="title-txt">Create a New Channel</span>
+                    <label for="channel" id="create-channel-label">Channel Name</label>
+                    <input id="channel-name" class="modal-txt" type="text" />
+                    <button id="create-channel-btn" class="modal-btn">-></button>
                 </div>
             </div>
         </div>
